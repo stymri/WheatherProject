@@ -23,17 +23,18 @@ public class NetworkFragment extends Fragment {
 
     private DownloadCallback<DownloadTaskResult> callback;
     private DownloadTask downloadTask;
-    private String urlString;
+    private String urlString = "https://api.openweathermap.org/data/2.5/weather?lat=28.67&lon=77.22&appid=154b075c1652f4f2d9c3b7420ab1362a";
 
     /**
      * Static initializer for NetworkFragment that sets the URL of the host it will be downloading
      * from.
      */
-    public static NetworkFragment getInstance(FragmentManager fragmentManager, String url) {
+    public static NetworkFragment getInstance(FragmentManager fragmentManager, String url,DownloadCallback<DownloadTaskResult> prm_Callback) {
         NetworkFragment networkFragment = new NetworkFragment();
         Bundle args = new Bundle();
         args.putString(URL_KEY, url);
         networkFragment.setArguments(args);
+        networkFragment.callback = prm_Callback;
         fragmentManager.beginTransaction().add(networkFragment, TAG).commit();
         return networkFragment;
     }
@@ -48,7 +49,7 @@ public class NetworkFragment extends Fragment {
     public void onAttach(Context context) {
         super.onAttach(context);
         // Host Activity will handle callbacks from task.
-        callback = (DownloadCallback<DownloadTaskResult>) context;
+        //callback = (DownloadCallback<DownloadTaskResult>) context;
     }
 
     @Override

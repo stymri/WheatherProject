@@ -50,6 +50,7 @@ public class DownloadTask extends AsyncTask<String , Integer , DownloadTaskResul
             }
         } catch(Exception v_exException){
             v_Return = new DownloadTaskResult(v_exException);
+            v_exException.printStackTrace();
         }
         return v_Return;
     }
