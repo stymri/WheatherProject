@@ -23,8 +23,12 @@ public class NetworkFragment extends Fragment {
 
     private DownloadCallback<DownloadTaskResult> callback;
     private DownloadTask downloadTask;
-    private String urlString = "https://api.openweathermap.org/data/2.5/weather?lat=28.67&lon=77.22&appid=154b075c1652f4f2d9c3b7420ab1362a";
 
+    private String urlString = "https://api.openweathermap.org/data/2.5/onecall?lat=28.67&lon=77.22&units=metric&appid=154b075c1652f4f2d9c3b7420ab1362a";
+
+    public void setUrlString(String urlString) {
+        this.urlString = urlString;
+    }
     /**
      * Static initializer for NetworkFragment that sets the URL of the host it will be downloading
      * from.
@@ -35,6 +39,7 @@ public class NetworkFragment extends Fragment {
         args.putString(URL_KEY, url);
         networkFragment.setArguments(args);
         networkFragment.callback = prm_Callback;
+        networkFragment.setUrlString(url);
         fragmentManager.beginTransaction().add(networkFragment, TAG).commit();
         return networkFragment;
     }

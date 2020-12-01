@@ -11,10 +11,19 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
+import android.widget.TextView;
+
+import org.json.JSONArray;
+import org.json.JSONObject;
+
+import java.text.DateFormat;
+import java.util.Date;
 
 import rai.satyam.wheatherproject.util.Utils;
 import rai.satyam.wheatherproject.util.http.DownloadCallback;
 import rai.satyam.wheatherproject.util.http.DownloadTaskResult;
+import rai.satyam.wheatherproject.util.http.ImageDownload;
 import rai.satyam.wheatherproject.util.http.NetworkFragment;
 
 /**
@@ -40,6 +49,11 @@ public class ShowWeatherDetails extends Fragment implements DownloadCallback<Dow
     // Boolean telling us whether a download is in progress, so we don't trigger overlapping
     // downloads with consecutive button clicks.
     private boolean downloading = false;
+
+    TextView textViewDate;
+    TextView textViewTemp;
+    ImageView imageView;
+    TextView textViewWheather;
 
     public ShowWeatherDetails() {
         // Required empty public constructor
@@ -75,7 +89,7 @@ public class ShowWeatherDetails extends Fragment implements DownloadCallback<Dow
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        networkFragment = NetworkFragment.getInstance(getActivity().getSupportFragmentManager(), "https://api.openweathermap.org/data/2.5/weather?lat=28.67&lon=77.22&appid=154b075c1652f4f2d9c3b7420ab1362a" ,this);
+        networkFragment = NetworkFragment.getInstance(getActivity().getSupportFragmentManager(), "https://api.openweathermap.org/data/2.5/onecall?lat=28.67&lon=77.22&units=metric&appid=154b075c1652f4f2d9c3b7420ab1362a" ,this);
         this.startDownload();
         // Inflate the layout for this fragment
         return inflater.inflate(R.layout.fragment_show_weather_details, container, false);
@@ -83,10 +97,35 @@ public class ShowWeatherDetails extends Fragment implements DownloadCallback<Dow
 
     @Override
     public void updateFromDownload(DownloadTaskResult result) {
-        String v_sResponse;
-        if (result.getResponse() != null){
-            v_sResponse = Utils.getStringFromInputStream(result.getResponse());
-            Log.d("response",v_sResponse);
+        String v_sResponse , v_sTemp;
+        JSONObject v_objJson , v_objJsonCurrent ,v_objJsonWheather;
+        JSONArray v_objJsonArray;
+        android.text.format.DateFormat dateFormat = new android.text.format.DateFormat();
+        ImageDownload imageDownload;
+        try {
+            textViewDate = getActivity().findViewById(R.id.textViewDate);
+            textViewTemp = getActivity().findViewById(R.id.textViewTemp);
+            imageView = getActivity().findViewById(R.id.imageView);
+            textViewWheather = getActivity().findViewById(R.id.textViewWheather);
+            if (result.getResponseString() != null){
+                v_sResponse = result.getResponseString();
+                //Log.d("response",v_sResponse);
+                v_objJson = new JSONObject(v_sResponse);
+                v_objJsonCurrent = v_objJson.getJSONObject("current");
+                v_sTemp = dateFormat.format("hh:mm:ss a",new Date(v_objJsonCurrent.getLong("dt")*1000L)).toString();
+                textViewDate.setText(v_sTemp);
+                v_sTemp = "" + v_objJsonCurrent.getDouble("temp") + " °C";
+                textViewTemp.setText(v_sTemp);
+                v_objJsonArray = v_objJsonCurrent.getJSONArray("weather");
+                v_objJsonWheather = v_objJsonArray.getJSONObject(0);
+                v_sTemp = v_objJsonWheather.getString("description");
+                textViewWheather.setText(v_sTemp);
+                v_sTemp = "https://openweathermap.org/img/wn/"+v_objJsonWheather.getString("icon")+"@4x.png";
+                imageDownload = ImageDownload.newInstance(getActivity().getSupportFragmentManager() ,v_sTemp,imageView);
+
+            }
+        } catch(Exception v_exException){
+            v_exException.printStackTrace();
         }
     }
 

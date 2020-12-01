@@ -9,6 +9,8 @@ import java.net.URL;
 
 import javax.net.ssl.HttpsURLConnection;
 
+import rai.satyam.wheatherproject.util.Utils;
+
 public class DownloadTask extends AsyncTask<String , Integer , DownloadTaskResult> {
     private DownloadCallback<DownloadTaskResult> g_objCallBack;
 
@@ -25,28 +27,22 @@ public class DownloadTask extends AsyncTask<String , Integer , DownloadTaskResul
         NetworkInfo v_objNetworkInfo;
         if (this.g_objCallBack != null){
             v_objNetworkInfo = this.g_objCallBack.getActiveNetworkInfo();
-            if (v_objNetworkInfo == null || !v_objNetworkInfo.isConnected() ){
+            /**if (v_objNetworkInfo == null || !v_objNetworkInfo.isConnected() ){
                 this.g_objCallBack.updateFromDownload(new DownloadTaskResult(new Exception("You are Offline")));
                 cancel(true);
-            }
+            } **/
         }
     }
 
     @Override
     protected DownloadTaskResult doInBackground(String... prm_arrUrls) {
         DownloadTaskResult v_Return = null;
-        String v_sUrlString;
-        InputStream v_objInputStream = null;
+        String v_sUrlString , v_sReturn = null;
         try{
             if (!isCancelled() && prm_arrUrls != null && prm_arrUrls.length > 0) {
                 v_sUrlString = prm_arrUrls[0];
                 URL url = new URL(v_sUrlString);
-                v_objInputStream = downloadUrl(url);
-                if (v_objInputStream != null) {
-                    v_Return = new DownloadTaskResult(v_objInputStream);
-                } else {
-                    v_Return = new DownloadTaskResult(new IOException("No response received."));
-                }
+                v_Return = downloadUrl(url);
             }
         } catch(Exception v_exException){
             v_Return = new DownloadTaskResult(v_exException);
@@ -60,10 +56,10 @@ public class DownloadTask extends AsyncTask<String , Integer , DownloadTaskResul
      * If the network request is successful, it returns the response body in String form. Otherwise,
      * it will throw an IOException.
      */
-    private InputStream downloadUrl(URL url) throws IOException {
+    private DownloadTaskResult downloadUrl(URL url) throws IOException {
         InputStream v_objInputStream = null;
         HttpsURLConnection connection = null;
-        String result = null;
+        DownloadTaskResult v_Return;
         try {
             connection = (HttpsURLConnection) url.openConnection();
             // Timeout for reading InputStream arbitrarily set to 3000ms.
@@ -84,14 +80,19 @@ public class DownloadTask extends AsyncTask<String , Integer , DownloadTaskResul
             }
             // Retrieve the response body as an InputStream.
             v_objInputStream = connection.getInputStream();
+            v_Return = new DownloadTaskResult();
+            v_Return.processAndSaveResponse(connection.getContentType(),v_objInputStream);
             publishProgress(DownloadCallback.Progress.GET_INPUT_STREAM_SUCCESS, 0);
         } finally {
             // Close Stream and disconnect HTTPS connection.
-            if (connection != null) {
+            if (null != connection) {
                 connection.disconnect();
             }
+            if (v_objInputStream != null){
+                v_objInputStream.close();
+            }
         }
-        return v_objInputStream;
+        return v_Return;
     }
 
     @Override
